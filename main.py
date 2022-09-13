@@ -1,4 +1,6 @@
-from tensorflow.keras.optimizers import Adam
+import argparse
+
+import tensorflow.keras.optimizers
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 import tensorflow as tf
@@ -10,15 +12,27 @@ import re
 import string
 import tensorflow as tf
 import nltk
+
+from config import process_config
+
 nltk.download('punkt')
 from nltk.tokenize import word_tokenize, sent_tokenize
 from attention_layer import Attention
 import gensim
 from gensim.models import Word2Vec
+import tensorflow as tf
 
 
 print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+parser = argparse.ArgumentParser(description='Train BERT-base model on task of labeling radiology reports.')
 
+
+parser.add_argument('--config_json', type=str, nargs='?', required=True,
+                        help='path to config containing training parameters')
+
+args = parser.parse_args()
+config_path = args.config_json
+config = process_config(config_path)
 
 def read_data(path):
     df = pd.read_excel(path)
@@ -55,7 +69,7 @@ for word in counts:
     words.append(word)
 
 
-def encode_sentence(text, vocab2index, N=256):
+def encode_sentence(text, vocab2index, N=config.max_length):
     tokenized = tokenize(text)
     encoded = np.zeros(N, dtype=int)
     enc1 = np.array([vocab2index.get(word, vocab2index["UNK"]) for word in tokenized])
@@ -106,7 +120,7 @@ pretrained_weights, vocab, vocab2index = get_emb_matrix(wvec_model, counts)
 
 def rnn_model():
     model = tf.keras.Sequential()
-    model.add(tf.keras.layers.Embedding(vocab_size, output_dim=200, input_length=256, weights=[pretrained_weights], trainable=False))
+    model.add(tf.keras.layers.Embedding(vocab_size, output_dim=200, input_length=config.max_length, weights=[pretrained_weights], trainable=False))
     model.add(tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(50, return_sequences=True)))
     model.add(Attention(return_sequences=False))
     model.add(tf.keras.layers.Dense(3, activation='softmax'))
@@ -115,7 +129,9 @@ def rnn_model():
 
 if __name__ == '__main__':
     model = rnn_model()
-    model.compile('adam', 'sparse_categorical_crossentropy', metrics=['accuracy'])
-    model.fit(X_train, y_train, validation_data=(X_valid, y_valid), epochs=3)
+    opt = tf.keras.optimizers.Adam(learning_rate=config.learning_rate)
+    model.compile(opt, 'sparse_categorical_crossentropy', metrics=['accuracy'])
+    model.fit(X_train, y_train, validation_data=(X_valid, y_valid), epochs=config.num_epochs, verbose=2,batch_size=config.batch_size)
     accr = model.evaluate(X_test, y_test)
+
 
