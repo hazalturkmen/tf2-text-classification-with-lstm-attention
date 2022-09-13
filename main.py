@@ -24,7 +24,7 @@ import tensorflow as tf
 
 
 print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
-parser = argparse.ArgumentParser(description='Train BERT-base model on task of labeling radiology reports.')
+parser = argparse.ArgumentParser(description='Train BLSTM-attention model on task of labeling radiology reports.')
 
 
 parser.add_argument('--config_json', type=str, nargs='?', required=True,
