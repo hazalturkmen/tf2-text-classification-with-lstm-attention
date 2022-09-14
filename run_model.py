@@ -133,5 +133,23 @@ if __name__ == '__main__':
     model.compile(opt, 'sparse_categorical_crossentropy', metrics=['accuracy'])
     model.fit(X_train, y_train, validation_data=(X_valid, y_valid), epochs=config.num_epochs, verbose=2,batch_size=config.batch_size)
     accr = model.evaluate(X_test, y_test)
+    y_pred = model.predict(X_test)
+    classes = np.argmax(y_pred, axis=1)
+
+
+    f1score = f1_score(y_test, classes, labels=None, pos_label=1, average='weighted')
+    recall = sklearn.metrics.recall_score(y_test, classes, average='weighted')
+    precision = sklearn.metrics.precision_score(y_test, classes, average='weighted')
+    print(f'F1score: ' + str(f1score))
+
+
+    print(f'recall: {recall * 100:.2f}%')
+    print(f'precision: {precision * 100:.2f}%')
+    f1_scores = f1_score(y_test, classes, average=None, labels=[1, 0, 2])
+    print({label: score for label, score in zip([1, 0, 2], f1_scores)})
+
+    print('Classification Report:')
+    print(classification_report(y_test, classes, labels=[1, 0, 2]))
+    accr = model.evaluate(X_test, y_test)
 
 
