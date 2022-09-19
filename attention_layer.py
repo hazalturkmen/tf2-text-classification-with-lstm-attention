@@ -1,4 +1,4 @@
-#Referenced from link https://colab.research.google.com/drive/1ddbQ-YPSJ4xuHOmZbfSHSYJJ1otBsoNv?usp=sharing
+#source from link https://colab.research.google.com/drive/1ddbQ-YPSJ4xuHOmZbfSHSYJJ1otBsoNv?usp=sharing
 
 
 from tensorflow.keras.layers import Layer
